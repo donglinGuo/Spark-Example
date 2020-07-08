@@ -4,21 +4,21 @@
 * 打包成jar包后就可以通过spark-submit脚本提交应用程序，该脚本负责配置spark相关的classpath和依赖，并支持不同的集群管理器和部署模式。
 * spark-submit脚本常用的选项
     ```
-    ./bin/spark-submit \
-    --class <main-class> \
-    --master <master-url> \
-    --deploy-mode <deploy-mode> \
-    --conf <key>=<value> \
+    ./bin/spark-submit 
+    --class <main-class>
+    --master <master-url> 
+    --deploy-mode <deploy-mode> 
+    --conf <key>=<value> 
     ... # other options
-    <application-jar> \
+    <application-jar> 
     [application-arguments]
     ```
-    --class: spark程序的入口 \
-    --master: 集群的master url \
+    --class: spark程序的入口 
+    --master: 集群的master url 
     --deploy-mode: 是将driver节点放在集群中（cluster）还是本地（client） \
     --conf： 以key=value的形式配置spark的属性，如果value中包含空格则需要使用引号阔起来--conf "key=value" \
     application-jar： jar包的路径，该路径需要对集群可见，如hdfs路径，或则所有节点上的file://路径 \
-    application-arguments： 传递给主函数main方法的参数 \
+    application-arguments： 传递给主函数main方法的参数 
 
 * 部署模式deploy-mode，当提交程序的机器与集群物理位置比较近时可以选用client方式部署，这样driver节点和集群节点通信不会影响程序执行性能，如果物理位置比较远，需要选用cluster方式部署，既在集群中选择一个节点作为driver。
 * 对于python程序使用.py文件替换application-jar包，py-spark会通过--py-files参数查找对应的依赖文件

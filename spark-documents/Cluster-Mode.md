@@ -32,7 +32,7 @@
 * Worker node 集群中可以执行spark程序代码的节点
 * Executor 在worker node上为某个spark程序启动的进程，它可以运行分配到的任务，并在存储相关数据在内存或磁盘中。每个spark应用程序都有自己的executors。
 * Task 分配到一个executor上的可执行单元
-* Job 由多种spark行为产生的task构成的并行计算，可以在driver日志里看到该术语。
+* Job 由多种spark action算子产生的task构成的并行计算，可以在driver日志里看到该术语。
 * stage 每个job被分割为较小的tasks
 
 https://www.jianshu.com/p/3aa52ee3a802

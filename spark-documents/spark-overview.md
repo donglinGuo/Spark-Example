@@ -34,7 +34,55 @@
   7. TaskScheduler负责Task级的调度，将DAGScheduler给过来的Taskset按照指定的调度策略分发到Executor上执行
 
 
-* 参考
+
+#### Spark任务执行流程
+
+
+1. 将我们编写的程序打成 jar 包。
+
+2. 调用spark-submit脚本提交任务到集群上运行。
+
+3. 运行 sparkSubmit 的 main 方法，在这个方法中通过反射的方式创建我们编写的主类的实例对象，然后调用 main 方法，开始执行我们的代码。
+
+4. 当代码运行到创建 SparkContext 对象时，那就开始初始化 SparkContext 对象了
+
+5. 在初始化 SparkContext 对象的时候，会创建两个特别重要的对象，分别是DAGScheduler和TaskScheduler。DAGScheduler的作用是将RDD的依赖切分成一个一个的stage，然后将stage作为taskSet提交给 DriverActor。
+
+6. 在构建 TaskScheduler 的同时，会创建两个非常重要的对象，分别是 DriverActor 和ClientActor。clientActor的作用是向master注册用户提交的任务，DriverActor 的作用接受executor的反向注册，将任务提交给 executor。
+
+7. 当 ClientActor 启动后，会将用户提交的任务和相关的参数封装到 ApplicationDescription对象中，然后提交给 master 进行任务的注册。
+
+8. 当 master 接受到 clientActor 提交的任务请求时，会将请求参数进行解析，并封装成Application，然后将其持久化，然后将其加入到任务队列waitingApps中。
+
+9. 当轮到我们提交的任务运行时，就开始调用schedule()，进行任务资源的调度
+
+10. master将调度好的资源封装到launchExecutor中发送给指定的worker。
+
+11. worker接受到Master发送来的launchExecutor时，会将其解压并封装到ExecutorRunner中，然后调用这个对象的start(), 启动Executor。
+
+12. Executor启动后会向DriverActor进行反向注册。
+
+13. driverActor 会发送注册成功的消息给Executor。
+
+14. xecutor接受到DriverActor注册成功的消息后会创建一个线程池，用于执行 DriverActor发送过来的task任务
+
+15. 当属于这个任务的所有的Executor启动并反向注册成功后，就意味着运行这个任务的环境已经准备好了，driver会结束SparkContext对象的初始化，也就意味着 new SparkContext这句代码运行完成。
+
+16. 当初始化sc成功后，driver端就会继续运行我们编写的代码，然后开始创建初始的RDD，然后进行一系列转换操作，当遇到一个 action算子时，也就意味着触发了一个job。
+
+17. driver会将这个job提交给DAGScheduler。
+
+18. DAGScheduler将接受到的job，从最后一个算子向前推导，将DAG依据宽依赖划分成一个一个的 tage，然后将stage封装成taskSet，并将taskSet中的task提交给DriverActor。
+
+19. DriverActor接受到DAGScheduler发送过来的task，会拿到一个序列化器，对task进行序列化，然后将序列化好的task封装到launchTask中，然后将launchTask发送给指定的Executor。
+
+20. Executor接受到了DriverActor发送过来的launchTask时，会拿到一个反序列化器，对launchTask进行反序列化，封装到TaskRunner中，然后从Executor这个线程池中获取一个线程，将反序列化好的任务中的算子作用在 RDD 对应的分区上
+
+
+
+
+
+#### 参考（不分先后顺序）
   1. https://zhuanlan.zhihu.com/p/97777405
   2. http://spark.apache.org/docs/latest/cluster-overview.html
   3. https://www.tutorialspoint.com/apache_spark/apache_spark_rdd.htm

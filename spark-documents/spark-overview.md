@@ -34,7 +34,7 @@
   7. TaskScheduler负责Task级的调度，将DAGScheduler给过来的Taskset按照指定的调度策略分发到Executor上执行
 
 
-* 参考
+#### 参考
   1. https://zhuanlan.zhihu.com/p/97777405
   2. http://spark.apache.org/docs/latest/cluster-overview.html
   3. https://www.tutorialspoint.com/apache_spark/apache_spark_rdd.htm

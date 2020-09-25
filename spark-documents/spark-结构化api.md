@@ -28,7 +28,7 @@
     这部分工作是根据优化后的逻辑计划生成最有的物理执行计划即生成一些列的RDD和转换操作
   * 执行
 
-#### 结构化操作
+#### 结构化操作-DataFrame
 
 * DataFrame
   DataFrame是由record组成，record是Row类型，一个record由多列组成，模式定义了列名及数据类型，partition定义了数据在集群上的物理分布，划分模式定义了partition带的分配方式。
@@ -81,4 +81,39 @@
         expr("(((someCol + 5) * 200) - 6) < otherCol")
       ```
   * 记录和行
-      
+    * spark中DataFrame中的每一行都是一个Row类型的对象，Spark使用列表达式操纵该对象，Row对象内部为字节数组，但Spark没有提供访问这些数组的入口，所以只能通过列表达式进行处理。虽然DataFrame具有模式，但单独一个Row不具有模式，所以如果要创建一个Row，需要按照所属的DataFrame的模式规定的列顺序初始化Row。
+      ```scala
+        // in Scala
+        import org.apache.spark.sql.Row
+        val myRow = Row("Hello", null, 1, false)
+      ```
+    * 行数据的访问需要指定位置
+      ```scala
+        // in Scala
+        myRow(0) // 任意类型
+        myRow(0).asInstanceOf[String] // 字符串
+        myRow.getString(0) // 字符串
+        myRow.getInt(2) // 整型
+      ```
+  * DataFrame转换操作
+    * 创建DataFrame
+      ```scala
+      val df = spark.read.format("json")
+      .load("/data/flight-data/json/2015-summary.json")
+      df.createOrReplaceTempView("dfTable") //注册为视图，方便后续使用
+      ```
+    * 通过一组Row创建DataFrame
+      ```scala
+        // in Scala
+        import org.apache.spark.sql.Row
+        import org.apache.spark.sql.types.{StructField, StructType, StringType, LongType}
+        val myManualSchema = new StructType(Array(
+        new StructField("some", StringType, true),
+        new StructField("col", StringType, true),
+        new StructField("names", LongType, false)))
+        val myRows = Seq(Row("Hello", null, 1L))
+        val myRDD = spark.sparkContext.parallelize(myRows)
+        val myDf = spark.createDataFrame(myRDD, myManualSchema)
+        myDf.show()
+      ```
+    * 
